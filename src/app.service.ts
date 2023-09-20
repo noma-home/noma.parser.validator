@@ -1,14 +1,21 @@
 import { Injectable, Logger } from "@nestjs/common";
 
-import { $Parse } from "./types";
+import { $Parse, $Advert } from "./types";
 import { SellerService } from "./seller/seller.service";
 import { AdvertService } from "./advert/advert.service";
+import { DuplicateFinderService } from "./duplicate-finder/duplicate-finder.service";
+import { OriginFinderService } from "./origin-finder/origin-finder.service";
 
 @Injectable()
 export class AppService {
     private readonly logger = new Logger(AppService.name);
 
-    constructor(private readonly sellerService: SellerService, private readonly advertService: AdvertService) {}
+    constructor(
+        private readonly sellerService: SellerService,
+        private readonly advertService: AdvertService,
+        private readonly duplicateFilter: DuplicateFinderService,
+        private readonly originFinder: OriginFinderService,
+    ) {}
 
     public async validateAdvert(data: $Parse.$Response) {
         const isValid = await this.validate(data.advert);
@@ -26,11 +33,11 @@ export class AppService {
             return;
         }
 
-        const possibleDuplicates = await this.findDuplicates(data);
+        const { possibleDuplicates } = await this.duplicateFilter.findDuplicates(data);
 
         if (possibleDuplicates.length > 0) {
             this.logger.log(`Found ${possibleDuplicates.length} possible duplicates`);
-            const { isOriginal, origin } = await this.findOrigin(data, possibleDuplicates);
+            const { isOriginal, origin } = await this.originFinder.findOriginal(data, possibleDuplicates);
 
             if (!isOriginal) {
                 this.logger.log("Parsed advert is not original");
@@ -48,19 +55,8 @@ export class AppService {
         }
     }
 
-    private async validate(data: $Parse.$Advert): Promise<boolean> {
+    private async validate(data: $Advert.$Advert): Promise<boolean> {
         return true;
-    }
-
-    private async findDuplicates(data: $Parse.$Response): Promise<string[]> {
-        return [];
-    }
-
-    private async findOrigin(
-        data: $Parse.$Advert,
-        possibleDuplicates: string[],
-    ): Promise<{ isOriginal: boolean; origin?: string }> {
-        return { isOriginal: true };
     }
 
     // TODO: change return type

@@ -1,11 +1,11 @@
+import { $Advert } from "./advert";
+
 export namespace $Parse {
     interface $Seller {
         name: string;
         phones: string[];
         url?: string;
     }
-
-    interface $Advert {}
 
     interface $ResponseMetadata {
         resource: string;
@@ -16,7 +16,7 @@ export namespace $Parse {
 
     interface $Response {
         seller: $Seller;
-        advert: $Advert;
+        advert: $Advert.$Advert;
         metadata: $ResponseMetadata;
     }
 }

@@ -6,6 +6,9 @@ import { AppController } from "./app.controller";
 import { AppConfigModule } from "./app.config";
 import { AppService } from "./app.service";
 import { SellerModule } from "./seller/seller.module";
+import { AdvertModule } from "./advert/advert.module";
+import { DuplicateFilterModule } from "./duplicate-finder/duplicate-filter.module";
+import { OriginFinderModule } from "./origin-finder/origin-finder.module";
 
 @Module({
     imports: [
@@ -26,7 +29,10 @@ import { SellerModule } from "./seller/seller.module";
             },
             inject: [ConfigService],
         }),
+        AdvertModule,
         SellerModule,
+        DuplicateFilterModule,
+        OriginFinderModule,
     ],
     controllers: [AppController],
     providers: [AppService],

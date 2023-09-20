@@ -1,11 +1,13 @@
-export namespace $DuplicateFinder {
-  export interface $Request {
-    advert: Object; // TODO: add $RawAdvert interface
-    possibleDuplicates: any[]; // TODO: add $RawAdvert interface
-  }
+import { $Advert } from "src/types";
 
-  export interface $Handler {
-    setNext(handler: $Handler): void;
-    handle(request: $Request): $Request | Promise<$Request>;
-  }
+export namespace $DuplicateFinder {
+    export interface $Request {
+        advert: $Advert.$Advert;
+        possibleDuplicates: string[];
+    }
+
+    export interface $Handler {
+        setNext(handler: $Handler): void;
+        handle(request: $Request): $Request | Promise<$Request>;
+    }
 }

@@ -10,6 +10,10 @@ export class AdvertService {
 
     constructor(@InjectModel(Advert.name) private readonly model: Model<AdvertDocument>) {}
 
+    public async filter(query: object): Promise<AdvertDocument[]> {
+        return this.model.find(query);
+    }
+
     public async create() {
         // TODO: implement
         return this.model.create({});
