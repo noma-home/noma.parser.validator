@@ -6,8 +6,13 @@ import { AppService } from "./app.service";
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+    constructor(private readonly appService: AppService) {}
 
-  @EventPattern("validate:advert")
-  public async validateAdvert(@Payload() data: $Parse.$Response) {}
+    @EventPattern("adverts:validate-income")
+    public async validateAdvert(@Payload() data: $Parse.$Response) {
+        await this.appService.validateIncomeAdvert(data);
+    }
+
+    @EventPattern("advert:filter-ids")
+    public async filterIDs() {}
 }

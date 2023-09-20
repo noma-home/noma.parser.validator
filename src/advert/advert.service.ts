@@ -28,4 +28,20 @@ export class AdvertService {
         this.logger.log(`Advert with ID ${copy.id} was marked as copy of advert ${originID}`);
         return this.model.findByIdAndUpdate(originID, { $push: { duplicates: copy.id } }, { new: true });
     }
+
+    public async filterNewAdverts(urls: string[]): Promise<{ newAdverts: string[]; existingAdverts: string[] }> {
+        const newAdverts: string[] = [];
+        const existingAdverts: string[] = [];
+
+        for (const url of urls) {
+            const match = await this.model.findOne({ "origins.url": url }).exec();
+            if (match) {
+                existingAdverts.push(url);
+            } else {
+                newAdverts.push(url);
+            }
+
+            return { newAdverts, existingAdverts };
+        }
+    }
 }

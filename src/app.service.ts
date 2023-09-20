@@ -17,7 +17,7 @@ export class AppService {
         private readonly originFinder: OriginFinderService,
     ) {}
 
-    public async validateAdvert(data: $Parse.$Response) {
+    public async validateIncomeAdvert(data: $Parse.$Response) {
         const isValid = await this.validate(data.advert);
 
         if (!isValid) {
@@ -53,6 +53,13 @@ export class AppService {
             const transformedAdvert = await this.transform(data);
             await this.publish(transformedAdvert);
         }
+    }
+
+    public async filterIncomeAdverts(adverts: string[]) {
+        const { newAdverts, existingAdverts } = await this.advertService.filterNewAdverts(adverts);
+
+        // TODO: emit advert urls from newAdverts to parse queue
+        // TODO: emit advert urls from existingAdverts to update queue
     }
 
     private async validate(data: $Advert.$Advert): Promise<boolean> {
