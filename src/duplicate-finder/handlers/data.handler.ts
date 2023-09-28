@@ -64,21 +64,34 @@ const fieldMapping: $Field[] = [
  * Finds all possible duplicates using advert data (area, number of room, etc)
  */
 export class DataHandler extends AbstractHandler {
+    /**
+     * Generates a query for filtering potential duplicates based on advert data.
+     *
+     * @param advert - The advert data.
+     * @returns A query for filtering potential duplicates.
+     */
     private generateQuery(advert: $Advert.$Advert) {
-        const query: Record<string, any> = {};
+        const formatKey = (key: string): string => `raw.data.${key}`;
+        const query: Record<string, any> = { isCopy: false };
         const flatAdvert = flatten(advert);
 
         for (const field of fieldMapping) {
             const value = flatAdvert[field.key];
             const filter = field.filter(value);
             if (filter) {
-                query[field.key] = filter;
+                query[formatKey(field.key)] = filter;
             }
         }
 
         return query;
     }
 
+    /**
+     * Handles a data-related request by filtering potential duplicates based on advert data.
+     *
+     * @param request - The data-related request to handle.
+     * @returns A promise that resolves to the handled request.
+     */
     public async handle(request: $DuplicateFinder.$Request): Promise<$DuplicateFinder.$Request> {
         request.possibleDuplicates = (await this.advertService.filter(this.generateQuery(request.advert))).map(
             (ad) => ad.id,

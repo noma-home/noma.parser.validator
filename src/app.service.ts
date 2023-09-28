@@ -1,10 +1,14 @@
 import { Injectable, Logger } from "@nestjs/common";
 
-import { $Parse, $Advert } from "./types";
-import { SellerService } from "./seller/seller.service";
-import { AdvertService } from "./advert/advert.service";
+import { $Parse } from "@types";
+import { objectToHash } from "@utils";
+import { SellerService } from "@seller";
+import { AdvertService } from "@advert";
+
 import { DuplicateFinderService } from "./duplicate-finder/duplicate-finder.service";
 import { OriginFinderService } from "./origin-finder/origin-finder.service";
+import { ParsersService } from "./parsers/parsers.service";
+import { NomaService } from "./noma/noma.service";
 
 @Injectable()
 export class AppService {
@@ -15,34 +19,46 @@ export class AppService {
         private readonly advertService: AdvertService,
         private readonly duplicateFilter: DuplicateFinderService,
         private readonly originFinder: OriginFinderService,
+        private readonly nomaService: NomaService,
+        private readonly parserService: ParsersService,
     ) {}
 
-    public async validateIncomeAdvert(data: $Parse.$Response) {
-        const isValid = await this.validate(data.advert);
+    public async validateIncomeAdvert(response: $Parse.$Response.$ParseNew) {
+        const { data } = response;
+        const isValid = await AppService.validateNewAdvert(response);
 
         if (!isValid) {
             this.logger.log("Parser advert is not valid");
-            // TODO: decide what to do if advert is not valid
             return;
         }
 
         const seller = await this.sellerService.getOrCreate(data.seller);
 
         if (seller.isRealtor) {
-            // TODO: decide what to do
+            await this.advertService.create();
             return;
         }
 
-        const { possibleDuplicates } = await this.duplicateFilter.findDuplicates(data);
+        const { possibleDuplicates } = await this.duplicateFilter.findDuplicates(data.advert.data);
 
         if (possibleDuplicates.length > 0) {
-            this.logger.log(`Found ${possibleDuplicates.length} possible duplicates`);
-            const { isOriginal, origin } = await this.originFinder.findOriginal(data, possibleDuplicates);
+            if (possibleDuplicates.length > 1) {
+                this.logger.warn(`Found ${possibleDuplicates.length} possible duplicates`);
+            }
+
+            const { isOriginal, origin } = await this.originFinder.findOriginal(response, possibleDuplicates);
 
             if (!isOriginal) {
                 this.logger.log("Parsed advert is not original");
                 await this.sellerService.updateRealtorStatus(seller.id);
-                await this.advertService.extendOrigin(origin, { ...data.metadata, lastParsed: new Date() });
+                await this.advertService.addOrigin(origin, {
+                    resource: response.metadata.parser.name,
+                    url: data.advert.metadata.url,
+                    id: data.advert.metadata.id,
+                    created: data.advert.metadata.time.create,
+                    lastUpdate: data.advert.metadata.time.lastUpdate,
+                    lastPhoneUpdate: data.advert.metadata.time.lastUpdate,
+                });
             } else {
                 this.logger.log("Parsed advert is original");
                 const advert = await this.advertService.create();
@@ -50,27 +66,43 @@ export class AppService {
             }
         } else {
             this.logger.log("Duplicates not found");
-            const transformedAdvert = await this.transform(data);
-            await this.publish(transformedAdvert);
+            const transformedAdvert = await this.nomaService.transformToNoma(data);
+            await this.nomaService.publish(transformedAdvert);
         }
     }
 
-    public async filterIncomeAdverts(adverts: string[]) {
-        const { newAdverts, existingAdverts } = await this.advertService.filterNewAdverts(adverts);
+    public async validateIncomeUpdate(response: $Parse.$Response.$ParseUpdate) {
+        const dataHash = objectToHash(response.data.advert.data);
+        const advert = await this.advertService.setUpdateMetadata(
+            response.request.data.id,
+            response.metadata.parser.name,
+            Boolean(response.data.seller && Object.keys(response.data.seller).length),
+        );
 
-        // TODO: emit advert urls from newAdverts to parse queue
-        // TODO: emit advert urls from existingAdverts to update queue
+        if (dataHash !== advert.data.hash) {
+            await this.advertService.updateRawData(response.request.data.id, response.data.advert.data);
+        }
     }
 
-    private async validate(data: $Advert.$Advert): Promise<boolean> {
-        return true;
+    public async requestToParseLatest(parser: $Parse.$Parser, limit: number) {
+        await this.parserService.requestToParseLatest(parser, limit);
     }
 
-    // TODO: change return type
-    private async transform(data: $Parse.$Response): Promise<Object> {
-        return {};
+    public async filterIncomeAdverts(adverts: string[], parser: $Parse.$Parser) {
+        const { newAdverts, existingAdverts } = await this.advertService.filterNewAdverts(adverts, parser);
+
+        if (newAdverts.length > 0) {
+            await Promise.all(newAdverts.map(async (url) => this.parserService.requestToParseNew(url, parser)));
+        }
+        if (existingAdverts.length > 0) {
+            await Promise.all(existingAdverts.map(async (url) => this.parserService.requestToParseUpdate(url, parser)));
+        }
     }
 
-    // TODO: change `advert` type
-    private async publish(advert: Object) {}
+    private static async validateNewAdvert(response: $Parse.$Response.$ParseNew): Promise<boolean> {
+        const { seller, advert } = response.data;
+        return Boolean(
+            seller && seller.name && seller.phones.length > 1 && advert.data.images.length > 0 && advert.data.area,
+        );
+    }
 }

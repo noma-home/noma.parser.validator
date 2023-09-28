@@ -23,7 +23,6 @@ export namespace $Advert {
 
     type $Category = "house" | "apartment";
     type $Operation = "sell" | "rent";
-    type $CurrencyLowerCase = "uah" | "usd";
 
     type $Currency = "UAH" | "USD";
 

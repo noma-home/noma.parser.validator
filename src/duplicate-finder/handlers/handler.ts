@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 
-import { $Parse } from "src/types";
+import { $Advert } from "src/types";
 import { DataHandler } from "./data.handler";
 import { ImageHandler } from "./image.handler";
 import { $DuplicateFinder } from "./interfaces";
@@ -13,7 +13,7 @@ export class Handler {
         this.handler = dataHandler.setNext(imageHandler);
     }
 
-    public async start(advert: $Parse.$Advert) {
+    public async start(advert: $Advert.$Advert) {
         return this.handler.handle({ advert, possibleDuplicates: [] });
     }
 }

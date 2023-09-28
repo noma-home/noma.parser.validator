@@ -1,1 +1,1 @@
-export * from "./advert.schema";
+export * from "./advert/advert.schema";

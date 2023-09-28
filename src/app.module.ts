@@ -9,6 +9,8 @@ import { SellerModule } from "./seller/seller.module";
 import { AdvertModule } from "./advert/advert.module";
 import { DuplicateFilterModule } from "./duplicate-finder/duplicate-filter.module";
 import { OriginFinderModule } from "./origin-finder/origin-finder.module";
+import { NomaModule } from "./noma/noma.module";
+import { ParsersModule } from "./parsers/parsers.module";
 
 @Module({
     imports: [
@@ -33,6 +35,8 @@ import { OriginFinderModule } from "./origin-finder/origin-finder.module";
         SellerModule,
         DuplicateFilterModule,
         OriginFinderModule,
+        NomaModule,
+        ParsersModule,
     ],
     controllers: [AppController],
     providers: [AppService],

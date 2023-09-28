@@ -1,0 +1,15 @@
+export enum BuildingEnum {
+    NotIndicated = "Не вказано",
+    TsarskiyBudinok = "Царський будинок",
+    Stalinka = "Сталінка",
+    Hruschovka = "Хрущовка",
+    Cheshka = "Чешка",
+    Gostinka = "Гостинка",
+    Sovmin = "Совмін",
+    Gurtozhitok = "Гуртожиток",
+    Range_from_80_to_90 = "Житловий фонд 80-90-і",
+    Range_from_91_to_00 = "Житловий фонд 91-2000-і",
+    Range_from_01_to_10 = "Житловий фонд 2001-2010-і",
+    Range_from_11_to_20 = "Житловий фонд 2011-2020-і",
+    Range_from_20 = "Житловий фонд від 2021 р.",
+}
