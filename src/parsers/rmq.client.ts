@@ -1,4 +1,4 @@
-import amqp from "amqplib";
+import * as amqp from "amqplib";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 
@@ -12,9 +12,9 @@ export class RmqClient {
     private connections = new Map<string, { connection: amqp.Connection; channel: amqp.Channel }>();
 
     constructor(private readonly config: ConfigService) {
-        this.uri = `amqp://${this.config.get("RABBITMQ_USER")}:${this.config.get(
-            "RABBITMQ_PASSWORD",
-        )}@${this.config.get("RABBITMQ_HOST")}:${this.config.get("RABBITMQ_PORT")}`;
+        this.uri = `amqp://${this.config.get("RABBIT_USER")}:${this.config.get("RABBIT_PASSWORD")}@${this.config.get(
+            "RABBIT_HOST",
+        )}:${this.config.get("RABBIT_PORT")}`;
     }
 
     private async createConnection(queue: string) {

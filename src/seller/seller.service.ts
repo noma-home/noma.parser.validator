@@ -9,6 +9,14 @@ export class SellerService {
     constructor(@InjectModel(Seller.name) private readonly model: Model<SellerDocument>) {}
 
     /**
+     * Finds sellers document by ID
+     * @param id - seller id
+     */
+    public async get(id: string) {
+        return this.model.findById(id);
+    }
+
+    /**
      * Retrieves a seller document from the database based on the provided phones array.
      * If a seller document is found, it checks if extends seller data,
      * else - it creates a new seller document with the provided name, phones, and url.
@@ -16,8 +24,12 @@ export class SellerService {
      * @returns A Promise that resolves to the retrieved or created seller document.
      */
     public async getOrCreate({ name, phones, url }: { name: string; phones: string[]; url?: string }) {
-        let seller = await this.model.findOne({ "account.phones": { $elemMatch: { $in: phones } } }).exec();
-        name = name.toLowerCase().trim();
+        let seller;
+
+        if (phones !== undefined) {
+            seller = await this.model.findOne({ "account.phones": { $elemMatch: { $in: phones } } }).exec();
+            name = name.toLowerCase().trim();
+        }
 
         if (seller) {
             if (!seller.account.names.includes(name)) {
@@ -63,5 +75,49 @@ export class SellerService {
      */
     public async updateRealtorStatus(id: string, isRealtor: boolean = true) {
         return this.model.findByIdAndUpdate(id, { isRealtor }, { new: true });
+    }
+
+    /**
+     * Updates sellers data if it changes
+     * @param sellerID - seller id
+     * @param data - update data
+     * @return An object with seller and update status
+     */
+    public async updateData(sellerID: string, data: { name?: string; phones?: string[]; url?: string }) {
+        let updated = false;
+        let seller = await this.get(sellerID);
+
+        if (data.name && !seller.account.names.includes(data.name)) {
+            seller = await this.model.findByIdAndUpdate(
+                sellerID,
+                { $push: { "account.names": data.name } },
+                { new: true },
+            );
+            updated = true;
+        }
+
+        if (Array.isArray(data.phones) && data.phones.length) {
+            for (const phone of data.phones) {
+                if (!seller.account.phones.includes(phone)) {
+                    seller = await this.model.findByIdAndUpdate(
+                        sellerID,
+                        { $push: { "account.phones": phone } },
+                        { new: true },
+                    );
+                    updated = true;
+                }
+            }
+        }
+
+        if (data.url && !seller.account.urls.includes(data.url)) {
+            seller = await this.model.findByIdAndUpdate(
+                sellerID,
+                { $push: { "account.urls": data.url } },
+                { new: true },
+            );
+            updated = true;
+        }
+
+        return { seller, updated };
     }
 }

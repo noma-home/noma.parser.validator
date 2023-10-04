@@ -38,7 +38,7 @@ export class OriginFinderService {
 
             const oldest = possibleOrigins[0];
 
-            if (oldest.created.getTime() - parseResponse.data.advert.metadata.time.create.getTime() > 0) {
+            if (oldest.created.getTime() - new Date(parseResponse.data.advert.metadata.create).getTime() > 0) {
                 return { isOriginal: true };
             } else {
                 return { isOriginal: false, origin: oldest.id };

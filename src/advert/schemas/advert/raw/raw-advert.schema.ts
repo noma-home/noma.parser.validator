@@ -6,7 +6,7 @@ import { Data } from "./data.schema";
 export class RawData {
     @Prop({
         type: Number,
-        required: true,
+        required: false,
         description: "Auto calculating field, stores hash of `data`, use to detect `data` changes",
     })
     hash: number;

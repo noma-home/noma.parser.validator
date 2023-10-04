@@ -1,18 +1,26 @@
-import path from "path";
+import * as nodePath from "path";
 import { firstValueFrom } from "rxjs";
 import { v4 as uuidv4 } from "uuid";
 import { spawn } from "child_process";
 import { createWriteStream } from "fs";
-import { mkdir, rmdir } from "fs/promises";
+import { mkdir, rm } from "fs/promises";
 
 import { AbstractHandler } from "./abstract.handler";
 import { $DuplicateFinder } from "./interfaces";
+import { AdvertService } from "@advert";
+import { HttpService } from "@nestjs/axios";
+import { Injectable } from "@nestjs/common";
 
 /**
  * Represents a handler for processing image-related requests in the Chain of Responsibility.
  * Filters possible duplicates from previous steps by comparing images
  */
+@Injectable()
 export class ImageHandler extends AbstractHandler {
+    constructor(public readonly advertService: AdvertService, public readonly httpService: HttpService) {
+        super();
+    }
+
     private static ComparerPath: string =
         "C:\\Users\\dev\\source\\repos\\ImageSimilarity\\ImageSimilarity\\bin\\Debug\\net7.0\\ImageSimilarity.exe";
 
@@ -39,8 +47,8 @@ export class ImageHandler extends AbstractHandler {
                     responseType: "stream",
                 }),
             );
-
-            const writeStream = await response.data.pipe(createWriteStream(path));
+            const filename = `${uuidv4().toString()}.jpg`;
+            const writeStream = await response.data.pipe(createWriteStream(nodePath.join(path, filename)));
 
             await new Promise((resolve, reject) => {
                 writeStream.on("finish", resolve);
@@ -106,9 +114,9 @@ export class ImageHandler extends AbstractHandler {
      * @returns An object containing the process directory path and advert images directory path.
      */
     private static async createProcessDir(): Promise<{ processPath: string; advertImagesPath: string }> {
-        const processUUID = uuidv4();
-        const processPath = path.join("tmp", processUUID);
-        const advertImagesPath = path.join(processPath, "advert");
+        const processUUID = uuidv4().toString();
+        const processPath = nodePath.join("tmp", processUUID);
+        const advertImagesPath = nodePath.join(processPath, "advert");
         await mkdir(advertImagesPath, { recursive: true });
         return { processPath, advertImagesPath };
     }
@@ -121,8 +129,8 @@ export class ImageHandler extends AbstractHandler {
      * @returns The path to the duplicate directory.
      */
     private static async createDuplicateDir(processPath: string, duplicateID: string) {
-        const duplicatePath = path.join(processPath, duplicateID);
-        await mkdir(path.join(processPath, duplicateID), { recursive: true });
+        const duplicatePath = nodePath.join(processPath, duplicateID);
+        await mkdir(nodePath.join(processPath, duplicateID), { recursive: true });
         return duplicatePath;
     }
 
@@ -134,25 +142,28 @@ export class ImageHandler extends AbstractHandler {
      */
 
     public async handle(request: $DuplicateFinder.$Request): Promise<$DuplicateFinder.$Request> {
-        const mismatched: string[] = [];
-        const minMatchNumber = ImageHandler.getMatchesLimit(request.advert.images.length);
-        const { processPath, advertImagesPath } = await ImageHandler.createProcessDir();
-        await this.downloadAdvertImages(request.advert.images, advertImagesPath);
+        if (request.possibleDuplicates.length > 0) {
+            const mismatched: string[] = [];
+            const minMatchNumber = ImageHandler.getMatchesLimit(request.advert.images.length);
+            const { processPath, advertImagesPath } = await ImageHandler.createProcessDir();
+            await this.downloadAdvertImages(request.advert.images, advertImagesPath);
 
-        for (let i = 0; i < request.possibleDuplicates.length; i++) {
-            const duplicatePath = await ImageHandler.createDuplicateDir(processPath, request.possibleDuplicates[i]);
-            const duplicate = await this.advertService.get(request.possibleDuplicates[i]);
-            const images = duplicate.data.raw.images;
-            await this.downloadAdvertImages(images, duplicatePath);
-            const numberOfMatches = await this.compare("CompareMultiple", advertImagesPath, duplicatePath);
-            if (numberOfMatches < minMatchNumber) {
-                mismatched.push(request.possibleDuplicates[i]);
+            for (let i = 0; i < request.possibleDuplicates.length; i++) {
+                const duplicatePath = await ImageHandler.createDuplicateDir(processPath, request.possibleDuplicates[i]);
+                const duplicate = await this.advertService.get(request.possibleDuplicates[i]);
+                const images = duplicate.data.raw.images;
+                await this.downloadAdvertImages(images, duplicatePath);
+                const numberOfMatches = await this.compare("CompareMultiple", advertImagesPath, duplicatePath);
+
+                if (numberOfMatches < minMatchNumber) {
+                    mismatched.push(request.possibleDuplicates[i]);
+                }
             }
+
+            await rm(processPath, { recursive: true });
+
+            request.possibleDuplicates.filter((id) => !mismatched.includes(id));
         }
-
-        await rmdir(processPath, { recursive: true });
-
-        request.possibleDuplicates.filter((id) => !mismatched.includes(id));
 
         return super.handle(request);
     }

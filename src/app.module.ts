@@ -2,15 +2,16 @@ import { Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
 
-import { AppController } from "./app.controller";
-import { AppConfigModule } from "./app.config";
-import { AppService } from "./app.service";
-import { SellerModule } from "./seller/seller.module";
-import { AdvertModule } from "./advert/advert.module";
+import { AdvertModule } from "@advert";
+import { SellerModule } from "@seller";
+
 import { DuplicateFilterModule } from "./duplicate-finder/duplicate-filter.module";
 import { OriginFinderModule } from "./origin-finder/origin-finder.module";
-import { NomaModule } from "./noma/noma.module";
 import { ParsersModule } from "./parsers/parsers.module";
+import { AppController } from "./app.controller";
+import { NomaModule } from "./noma/noma.module";
+import { AppConfigModule } from "./app.config";
+import { AppService } from "./app.service";
 
 @Module({
     imports: [

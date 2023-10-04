@@ -2,7 +2,6 @@ import { Prop, Schema } from "@nestjs/mongoose";
 import { Schema as MongoSchema } from "mongoose";
 
 import { $Advert } from "@types";
-import { Seller } from "@seller/schemas";
 import { CategoryEnum, OperationEnum } from "@advert/enums";
 
 import { Area } from "./area";
@@ -43,9 +42,6 @@ export class Data {
 
     @Prop({ type: Shape })
     shape: Shape;
-
-    @Prop({ type: MongoSchema.Types.ObjectId, required: true, ref: Seller.name })
-    seller: MongoSchema.Types.ObjectId;
 
     @Prop({ type: [String], required: true })
     images: string[];

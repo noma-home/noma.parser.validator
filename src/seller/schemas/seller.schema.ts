@@ -12,6 +12,9 @@ export class Seller {
 
     @Prop({ type: Boolean, default: false })
     isRealtor: boolean;
+
+    @Prop({ type: String, required: false, default: null })
+    nomaID: string;
 }
 
 export const SellerSchema = SchemaFactory.createForClass(Seller);

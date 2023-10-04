@@ -15,8 +15,8 @@ export class Location {
     district: string;
 
     @Prop({ type: String })
-    string: string;
+    street: string;
 
-    @Prop({ type: String, required: true })
+    @Prop({ type: String })
     address: string;
 }

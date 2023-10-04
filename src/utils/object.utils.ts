@@ -41,10 +41,15 @@ export function flatten(obj: object, parent = ""): FlattenedObject {
  * @returns The hash code for the object.
  */
 export function objectToHash(obj: Object): number {
-    const str = JSON.stringify(obj);
-    let h: number = 0;
-    for (let i = 0; i < str.length; i++) {
-        h = 31 * h + str.charCodeAt(i);
+    const st = JSON.stringify(Object.entries(flatten(obj)).sort());
+    let hash = 0,
+        i,
+        chr;
+    if (st.length === 0) return hash;
+    for (i = 0; i < st.length; i++) {
+        chr = st.charCodeAt(i);
+        hash = (hash << 5) - hash + chr;
+        hash |= 0;
     }
-    return h & 0xffffffff;
+    return hash;
 }

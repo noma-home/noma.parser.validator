@@ -21,8 +21,8 @@
             "@seller/*": ["./src/seller/*"],
             "@seller": ["./src/seller/index"],
             "@advert/*": ["./src/advert/*"],
-            "@advert": ["./src/advert/index.ts"],
-            "@utils": ["./src/utils/index.ts"],
+            "@advert": ["./src/advert/index"],
+            "@utils": ["./src/utils/index"],
             "@types": ["./src/types"]
         }
     }

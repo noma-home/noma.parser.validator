@@ -1,4 +1,4 @@
-import { Prop, Schema } from "@nestjs/mongoose";
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
 @Schema({ _id: false })
 export class Origin {
@@ -20,3 +20,5 @@ export class Origin {
     @Prop({ type: Date, default: () => new Date(), description: "Date when seller phone was parsed on resource" })
     lastPhoneUpdate: Date;
 }
+
+export const OriginSchema = SchemaFactory.createForClass(Origin);

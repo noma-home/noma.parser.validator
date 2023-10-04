@@ -10,10 +10,8 @@ export namespace $Parse {
     }
 
     interface $AdvertMetadata {
-        time: {
-            create: Date;
-            lastUpdate: Date;
-        };
+        create: Date;
+        lastUpdate: Date;
         url: string;
         id?: string;
     }
@@ -34,7 +32,7 @@ export namespace $Parse {
         interface $ParseNew extends _Request {
             pattern: "parse:new";
             data: {
-                id: string;
+                url: string;
             };
         }
 
@@ -42,6 +40,7 @@ export namespace $Parse {
             pattern: "parse:update";
             data: {
                 id: string;
+                url: string;
                 withPhone: boolean;
             };
         }
@@ -50,6 +49,8 @@ export namespace $Parse {
             pattern: "parse:latest";
             data: {
                 limit: number;
+                category: string;
+                operation: string;
             };
         }
 

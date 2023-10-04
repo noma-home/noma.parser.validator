@@ -10,7 +10,8 @@ export class Handler {
     public readonly handler: $DuplicateFinder.$Handler;
 
     constructor(private readonly dataHandler: DataHandler, private readonly imageHandler: ImageHandler) {
-        this.handler = dataHandler.setNext(imageHandler);
+        dataHandler.setNext(imageHandler);
+        this.handler = dataHandler;
     }
 
     public async start(advert: $Advert.$Advert) {
