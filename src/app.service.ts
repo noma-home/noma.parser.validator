@@ -45,7 +45,7 @@ export class AppService {
      */
     private async markAsRealtor(sellerID: string) {
         const seller = await this.sellerService.updateRealtorStatus(sellerID);
-        await this.nomaService.updateUser(seller.id, true);
+        await this.nomaService.updateUser(seller.id);
         return seller;
     }
 
@@ -83,7 +83,7 @@ export class AppService {
      * Creates a new Advert document and publish its data to Noma
      * @param data {CreateAdvertDto} - advert data
      * @param sellerID {string} - id of seller
-     * @param parseData {{ resource: string; date: Date }} - data about parse process
+     * @param parseData - data about parse process
      * @return advert document
      */
     private async createAndPublish(

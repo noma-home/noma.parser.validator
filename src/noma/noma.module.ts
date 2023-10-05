@@ -1,15 +1,21 @@
-import { Module } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { ClientsModule, RmqOptions, Transport } from "@nestjs/microservices";
+import { ConfigService } from "@nestjs/config";
+import { HttpModule } from "@nestjs/axios";
+import { Module } from "@nestjs/common";
 
 import { AdvertModule } from "@advert";
+import { SellerModule } from "@seller";
 
 import { AppConfigModule } from "../app.config";
 import { NomaService } from "./noma.service";
+import { LocationService } from "./location.service";
 
 @Module({
     imports: [
         AdvertModule,
+        SellerModule,
+        HttpModule,
+        AppConfigModule,
         ClientsModule.registerAsync([
             {
                 imports: [AppConfigModule],
@@ -73,7 +79,7 @@ import { NomaService } from "./noma.service";
             },
         ]),
     ],
-    providers: [NomaService],
+    providers: [NomaService, LocationService],
     exports: [NomaService],
 })
 export class NomaModule {}

@@ -2,21 +2,21 @@ import { Prop, Schema } from "@nestjs/mongoose";
 
 @Schema({ _id: false })
 export class Location {
-    @Prop({ type: String, required: true })
+    @Prop({ type: String })
     region: string;
 
     @Prop({ type: String })
-    subRegion: string;
-
-    @Prop({ type: String, required: true })
-    settlement: string;
+    subRegion?: string;
 
     @Prop({ type: String })
-    district: string;
+    settlement?: string;
 
     @Prop({ type: String })
-    street: string;
+    district?: string;
 
     @Prop({ type: String })
-    address: string;
+    street?: string;
+
+    @Prop({ type: String })
+    address?: string;
 }

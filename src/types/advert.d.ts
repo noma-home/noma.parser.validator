@@ -46,7 +46,7 @@ export namespace $Advert {
     interface $Location {
         region: string;
         subRegion?: string;
-        settlement: string;
+        settlement?: string;
         district?: string;
         neighborhood?: string;
         street?: string;

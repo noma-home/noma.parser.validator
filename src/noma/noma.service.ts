@@ -1,8 +1,12 @@
 import { lastValueFrom } from "rxjs";
-import { Inject, Injectable, Logger } from "@nestjs/common";
 import { ClientProxy } from "@nestjs/microservices";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 
 import { AdvertService } from "@advert";
+import { SellerService } from "@seller";
+import { $Advert } from "@types";
+
+import { LocationService } from "./location.service";
 
 interface $NomaResponse {
     id: string;
@@ -20,7 +24,25 @@ export class NomaService {
         @Inject("NOMA_ADVERT_SERVICE") private readonly advertClient: ClientProxy,
         @Inject("NOMA_USER_SERVICE") private readonly userClient: ClientProxy,
         private readonly advertService: AdvertService,
+        private readonly sellerService: SellerService,
+        private readonly locationService: LocationService,
     ) {}
+
+    private async convertLocation(location: $Advert.$Location): Promise<$Advert.$Location> {
+        const region = await this.locationService.getRegion(location);
+        const subRegion = await this.locationService.getSubRegion(location);
+        const settlement = await this.locationService.getSettlement(location);
+        const district = await this.locationService.getDistrict(location);
+        const street = await this.locationService.getStreet(location);
+
+        return {
+            region,
+            subRegion,
+            settlement,
+            district,
+            street,
+        };
+    }
 
     /**
      * Creates a new advert
@@ -28,9 +50,24 @@ export class NomaService {
      */
     public async createAdvert(id: string) {
         const instance = await this.advertService.get(id);
-        const response: $NomaResponse = await lastValueFrom(this.advertClient.emit("advert:new", instance.data.raw));
+        let seller = await this.sellerService.get(instance.seller.toString());
+
+        if (!seller.nomaID) {
+            await this.createUser(seller.id);
+            seller = await this.sellerService.get(seller.id);
+        }
+
+        const convertedLocation = await this.convertLocation(instance.data.raw.location);
+        instance.data.raw.location = { ...convertedLocation, address: instance.data.raw.location.address };
+
+        const response: $NomaResponse = await lastValueFrom(
+            this.advertClient.emit("advert:create-new", {
+                advert: { ...instance.data.raw, seller: { id: seller.nomaID, firstName: seller.account.names[0] } },
+            }),
+        );
         if (!response.id) {
             this.logger.error(`Creation Error: advert ${instance.id}`);
+            return;
         }
         await this.advertService.updateNomaData(instance.id, response.id, response.date);
     }
@@ -41,11 +78,16 @@ export class NomaService {
      */
     public async updateAdvert(id: string) {
         const instance = await this.advertService.get(id);
+
+        const convertedLocation = await this.convertLocation(instance.data.raw.location);
+        instance.data.raw.location = { ...convertedLocation, address: instance.data.raw.location.address };
+
         const response: $NomaResponse = await lastValueFrom(
             this.advertClient.emit("advert:update", { id: instance.metadata.noma.id, data: instance.data.raw }),
         );
         if (!response.id) {
             this.logger.error(`Update Error: advert ${instance.id}`);
+            return;
         }
         await this.advertService.updateNomaData(instance.id, response.id, response.date);
     }
@@ -57,23 +99,82 @@ export class NomaService {
     public async deleteAdvert(id: string) {
         const instance = await this.advertService.get(id);
         const response: { deleted: boolean } = await lastValueFrom(
-            this.advertClient.emit("advert:update", { id: instance.metadata.noma.id, data: instance.data.raw }),
+            this.advertClient.emit("advert:update", { id: instance.metadata.noma.id }),
         );
         if (!response.deleted) {
             this.logger.error(`Delete Error: advert ${instance.id}`);
+            return;
         }
         await this.advertService.updateNomaData(instance.id, null, null);
     }
 
-    public async createUser() {
-        // TODO: implement
+    /**
+     * Creates a new User
+     * @param sellerID - seller id
+     */
+    public async createUser(sellerID: string) {
+        const instance = await this.sellerService.get(sellerID);
+        const response: $NomaResponse = await lastValueFrom(
+            this.userClient.emit("user:crete-anonymous", {
+                status: { isRealtor: instance.isRealtor },
+                privacySettings: { showFullName: false, showPhoneNumber: true, allowMessages: false },
+                data: {
+                    firstName: instance.account.names[0],
+                    phones: instance.account.phones,
+                },
+            }),
+        );
+
+        if (!response.id) {
+            this.logger.error(`Creation Error: user ${instance.id}`);
+            return;
+        }
+
+        await this.sellerService.updateNomaRef(instance.id, response.id);
     }
 
-    public async updateUser(id: string, realtor?: boolean) {
-        // TODO: implement
+    /**
+     * Updates exiting user
+     * @param id { string } - seller ID
+     */
+    public async updateUser(id: string) {
+        const instance = await this.sellerService.get(id);
+
+        const response: $NomaResponse = await lastValueFrom(
+            this.userClient.emit("user:update", {
+                status: { isRealtor: instance.isRealtor },
+                data: {
+                    phones: instance.account.phones,
+                },
+            }),
+        );
+
+        if (!response.id) {
+            this.logger.error(`Update Error: user ${instance.id}`);
+            return;
+        }
+
+        return null;
     }
 
-    public async deleteUser() {
-        // TODO: implement
+    /**
+     * Deletes existing user
+     * @param id { string } - seller ID
+     */
+    public async deleteUser(id: string) {
+        const instance = await this.sellerService.get(id);
+
+        if (instance.nomaID) {
+            const response: { deleted: boolean } = await lastValueFrom(
+                this.userClient.emit("user:delete", { id: instance.id }),
+            );
+
+            if (!response.deleted) {
+                this.logger.error(`Delete Error: seller ${instance.id}`);
+                return;
+            }
+        }
+
+        return null;
     }
 }

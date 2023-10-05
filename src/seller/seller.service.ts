@@ -13,7 +13,7 @@ export class SellerService {
      * @param id - seller id
      */
     public async get(id: string) {
-        return this.model.findById(id);
+        return this.model.findById(id).exec();
     }
 
     /**
@@ -119,5 +119,14 @@ export class SellerService {
         }
 
         return { seller, updated };
+    }
+
+    /**
+     * Updates sellers reference to Noma
+     * @param sellerID {string} - seller ID
+     * @param nomaID { string | null } - sellers ID in noma(or null if deleted)
+     */
+    public async updateNomaRef(sellerID: string, nomaID: string | null) {
+        return this.model.findByIdAndUpdate(sellerID, { nomaID }, { new: true });
     }
 }
