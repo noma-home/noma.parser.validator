@@ -20,7 +20,7 @@ export class RmqClient {
     private async createConnection(queue: string) {
         const connection = await amqp.connect(this.uri);
         const channel = await connection.createChannel();
-        await channel.assertQueue(queue, { durable: false });
+        await channel.assertQueue(queue, { durable: true });
         this.connections.set(queue, { connection, channel });
     }
 

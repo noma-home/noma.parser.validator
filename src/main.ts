@@ -24,7 +24,7 @@ async function bootstrap() {
             ],
             queue: configService.get<string>("RABBIT_QUEUE"),
             queueOptions: {
-                durable: false,
+                durable: true,
             },
         },
     });
@@ -33,4 +33,6 @@ async function bootstrap() {
     await app.listen(parseInt(process.env.PORT || "3000"));
 }
 
-bootstrap();
+bootstrap().then(() => {
+    console.log("Application started.");
+});

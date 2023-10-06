@@ -33,4 +33,9 @@ export class AppController {
         await this.appService.requestToParseLatest(data.parser, data.category, data.operation, data.limit);
         this.logger.log(`Sent parse latest request with options (${JSON.stringify(data)})`);
     }
+
+    @EventPattern("test")
+    public async test() {
+        await this.appService.test();
+    }
 }

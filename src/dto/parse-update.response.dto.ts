@@ -1,5 +1,5 @@
 import { ParseResponseDto } from "./parse.response.dto";
-import { IsBoolean, IsNotEmpty, IsObject, IsOptional, IsString, ValidateNested } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsObject, IsString, ValidateNested } from "class-validator";
 import { $Advert, $Parse } from "@types";
 
 class ResponseDataDto {

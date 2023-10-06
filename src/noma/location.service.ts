@@ -50,7 +50,7 @@ export class LocationService {
      * @param location {$Advert.$Location} - advert location data
      */
     public async getSettlement(location: $Advert.$Location) {
-        if (location.settlement.toLowerCase().trim() === "Львів") {
+        if (location.settlement.toLowerCase().trim() === "львів") {
             return "64c552e4eca4d39d102386ae";
         }
 
@@ -67,18 +67,19 @@ export class LocationService {
         if (district) {
             const regex = LocationService.stringToRegex(district.replace("район", ""));
 
-            const response: AxiosResponse<{ matches: string[] }> = await lastValueFrom(
+            const response: AxiosResponse<{ _id: string }[]> = await lastValueFrom(
                 this.httpService.get(`${this.baseURL}/district`, { params: { regex } }),
             );
 
-            if (response.data.matches.length > 1) {
+            if (response.data.length > 1) {
                 this.logger.error(`Location cast error: found more than one match for district ${district}`);
-            } else if (response.data.matches.length === 0) {
+            } else if (response.data.length === 0) {
                 this.logger.error(`Location cast error: no matching districts for ${district}`);
             } else {
-                return response.data.matches[0];
+                return response.data[0]._id;
             }
         }
+        return null;
     }
 
     /**

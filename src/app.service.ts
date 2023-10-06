@@ -276,4 +276,9 @@ export class AppService {
 
         return advertDto;
     }
+
+    public async test() {
+        const id = "651700fd2b2af2102a196c87";
+        await this.nomaService.createAdvert(id);
+    }
 }

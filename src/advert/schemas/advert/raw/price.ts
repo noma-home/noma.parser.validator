@@ -1,5 +1,5 @@
 import { Prop, Schema } from "@nestjs/mongoose";
-import { CurrencyEnum } from "../../../enums";
+import { CurrencyEnum } from "@advert";
 
 @Schema({ _id: false })
 export class Price {

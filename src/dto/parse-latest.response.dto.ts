@@ -1,16 +1,5 @@
 import { ParseResponseDto } from "./parse.response.dto";
-import {
-    IsArray,
-    IsBoolean,
-    IsEnum,
-    IsNotEmpty,
-    IsNumber,
-    IsObject,
-    IsOptional,
-    IsString,
-    ValidateNested,
-} from "class-validator";
-import { $Advert, $Parse } from "@types";
+import { IsArray, IsEnum, IsNotEmpty, IsNumber, IsObject, IsString, ValidateNested } from "class-validator";
 import { CategoryEnum, OperationEnum } from "@advert";
 
 class ResponseDataDto {

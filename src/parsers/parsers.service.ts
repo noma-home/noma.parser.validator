@@ -5,16 +5,12 @@ import { AdvertService, CategoryEnum, OperationEnum } from "@advert";
 import { $Parse } from "@types";
 
 import { RmqClient } from "./rmq.client";
-import { type } from "os";
-import { lastValueFrom } from "rxjs";
 
 /**
  * Service responsible for interacting with parsers and sending parsing requests.
  */
 @Injectable()
 export class ParsersService {
-    private readonly logger = new Logger(ParsersService.name);
-
     constructor(
         private readonly rmqClient: RmqClient,
         private readonly advertService: AdvertService,

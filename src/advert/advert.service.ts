@@ -25,7 +25,7 @@ export class AdvertService {
      * Creates a new Advert document
      * @param data {CreateAdvertDto} - advert data
      * @param sellerID {string} - seller ID
-     * @param parseData {{ resource: string; date: Date }} - parse process metadata
+     * @param parseData - parse process metadata
      * @param isCopy {boolean} - is advert copy
      */
     public async create(
@@ -45,7 +45,7 @@ export class AdvertService {
     /**
      * Extends advert origins
      * @param id {string} - advert ID
-     * @param origin {{ resource: string; url: string; id?: string; created: Date; lastUpdate: Date; lastPhoneUpdate: Date }} - parsed origin
+     * @param origin - parsed origin
      */
     public async addOrigin(
         id: string,
