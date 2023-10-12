@@ -17,6 +17,7 @@ export class LocationService {
 
     private static stringToRegex(string: string): string {
         return string
+            .replaceAll("i", "і")
             .toLowerCase()
             .replaceAll(".", "")
             .trim()
@@ -67,16 +68,20 @@ export class LocationService {
         if (district) {
             const regex = LocationService.stringToRegex(district.replace("район", ""));
 
-            const response: AxiosResponse<{ _id: string }[]> = await lastValueFrom(
-                this.httpService.get(`${this.baseURL}/district`, { params: { regex } }),
-            );
+            try {
+                const response: AxiosResponse<{ _id: string }[]> = await lastValueFrom(
+                    this.httpService.get(`${this.baseURL}/district`, { params: { regex } }),
+                );
 
-            if (response.data.length > 1) {
-                this.logger.error(`Location cast error: found more than one match for district ${district}`);
-            } else if (response.data.length === 0) {
-                this.logger.error(`Location cast error: no matching districts for ${district}`);
-            } else {
-                return response.data[0]._id;
+                if (response.data.length > 1) {
+                    this.logger.error(`Location cast error: found more than one match for district ${district}`);
+                } else if (response.data.length === 0) {
+                    this.logger.error(`Location cast error: no matching districts for ${district}`);
+                } else {
+                    return response.data[0]._id;
+                }
+            } catch (e) {
+                return null;
             }
         }
         return null;
@@ -104,16 +109,20 @@ export class LocationService {
                 street.replace("вул", "").replace("вулиця", "").replace("просп", "").replace("проспект", ""),
             );
 
-            const response: AxiosResponse<{ matches: string[] }> = await lastValueFrom(
-                this.httpService.get(`${this.baseURL}/street`, { params: { regex, type } }),
-            );
+            try {
+                const response: AxiosResponse<{ matches: string[] }> = await lastValueFrom(
+                    this.httpService.get(`${this.baseURL}/street`, { params: { regex, type } }),
+                );
 
-            if (response.data.matches.length > 1) {
-                this.logger.error(`Location cast error: found more than one match for street ${street}`);
-            } else if (response.data.matches.length === 0) {
-                this.logger.error(`Location cast error: no matching streets for ${street}`);
-            } else {
-                return response.data.matches[0];
+                if (response.data.matches.length > 1) {
+                    this.logger.error(`Location cast error: found more than one match for street ${street}`);
+                } else if (response.data.matches.length === 0) {
+                    this.logger.error(`Location cast error: no matching streets for ${street}`);
+                } else {
+                    return response.data.matches[0];
+                }
+            } catch (e) {
+                return null;
             }
         }
 

@@ -61,9 +61,14 @@ export class NomaService {
         instance.data.raw.location = { ...convertedLocation, address: instance.data.raw.location.address };
 
         let payload: any = instance.data.raw;
-        payload.seller = { id: seller.nomaID, firstName: seller.account.names[0] };
 
-        const response: $NomaResponse = await lastValueFrom(this.advertClient.send("advert:create", payload));
+        const response: $NomaResponse = await lastValueFrom(
+            this.advertClient.send("advert:create", {
+                advert: payload,
+                seller: { id: seller.nomaID, name: seller.account.names[0] },
+                contactSettings: { allowMessages: false, allowPhone: true },
+            }),
+        );
 
         if (!response.id) {
             this.logger.error(`Creation Error: advert ${instance.id}`);
