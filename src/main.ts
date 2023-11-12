@@ -33,6 +33,4 @@ async function bootstrap() {
     await app.listen(parseInt(process.env.PORT || "3000"));
 }
 
-bootstrap().then(() => {
-    console.log("Application started.");
-});
+bootstrap().then(() => null);

@@ -28,12 +28,12 @@ export class NomaService {
         private readonly locationService: LocationService,
     ) {}
 
-    private async convertLocation(location: $Advert.$Location): Promise<$Advert.$Location> {
+    public async convertLocation(location: $Advert.$Location): Promise<$Advert.$Location> {
         const region = await this.locationService.getRegion(location);
-        const subRegion = await this.locationService.getSubRegion(location);
-        const settlement = await this.locationService.getSettlement(location);
+        const settlement = await this.locationService.getSettlement(location.settlement, region);
+        const subRegion = await this.locationService.getSubRegion(settlement);
         const district = await this.locationService.getDistrict(location);
-        const street = await this.locationService.getStreet(location);
+        const street = await this.locationService.getStreet(location, settlement, district);
 
         return {
             region,
@@ -60,7 +60,7 @@ export class NomaService {
         const convertedLocation = await this.convertLocation(instance.data.raw.location);
         instance.data.raw.location = { ...convertedLocation, address: instance.data.raw.location.address };
 
-        let payload: any = instance.data.raw;
+        const payload: any = instance.data.raw;
 
         const response: $NomaResponse = await lastValueFrom(
             this.advertClient.send("advert:create", {
@@ -120,7 +120,7 @@ export class NomaService {
     public async createUser(sellerID: string) {
         const instance = await this.sellerService.get(sellerID);
         const response = await lastValueFrom(
-            await this.userClient.send("user:create", {
+            this.userClient.send("user:create", {
                 status: { isRealtor: instance.isRealtor },
                 privacySettings: { showFullName: true, showPhoneNumber: true, allowMessages: false },
                 data: {
@@ -129,7 +129,7 @@ export class NomaService {
                 },
             }),
         );
-        //
+
         if (!response.id) {
             this.logger.error(`Creation Error: user ${instance.id}`);
             return;

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { HttpService } from "@nestjs/axios";
-import { AxiosResponse } from "axios";
+import { AxiosError, AxiosResponse } from "axios";
 import { lastValueFrom } from "rxjs";
 
 import { $Advert } from "@types";
@@ -36,11 +36,17 @@ export class LocationService {
 
     /**
      * For a giving advert location data finds Noma Location SubRegion
-     * @param location {$Advert.$Location} - advert location data
+     * Should be preformed after *getSettlement*
+     * @param settlement {string} - settlement
      */
-    public async getSubRegion(location: $Advert.$Location) {
-        if (location.settlement.toLowerCase().trim() === "Львів") {
-            return "64b805287ef0324d7e81d1c6";
+    public async getSubRegion(settlement: string | null) {
+        if (settlement) {
+            try {
+                const response = await lastValueFrom(this.httpService.get(`${this.baseURL}/settlement/${settlement}`));
+                return response.data.subRegion;
+            } catch (e) {
+                return null;
+            }
         }
 
         return null;
@@ -48,11 +54,39 @@ export class LocationService {
 
     /**
      * For a giving advert location data finds Noma Location Settlement
+     * Should be performed after *getRegion*
      * @param location {$Advert.$Location} - advert location data
      */
-    public async getSettlement(location: $Advert.$Location) {
-        if (location.settlement.toLowerCase().trim() === "львів") {
+    public async getSettlement(settlementRaw: string | null, region: string) {
+        const settlement = settlementRaw.trim().replace("село", "").replace("місто", "").toLowerCase();
+
+        if (settlement === "львів") {
             return "64c552e4eca4d39d102386ae";
+        }
+
+        if (settlement) {
+            const regex = LocationService.stringToRegex(settlement);
+
+            try {
+                const response = await lastValueFrom(
+                    this.httpService.get(`${this.baseURL}/settlement/filter`, {
+                        params: { regex, regionID: region },
+                    }),
+                );
+
+                if (response.data.length > 1) {
+                    this.logger.error(`Location cast error: found more than one match for settlement ${settlement}`);
+                } else if (response.data.length === 0) {
+                    this.logger.error(`Location cast error: no matching settlement for ${settlement}`);
+                } else {
+                    return response.data[0]._id;
+                }
+            } catch (e) {
+                if (e instanceof AxiosError) {
+                    console.log(e.response.data);
+                }
+                return null;
+            }
         }
 
         return null;
@@ -90,8 +124,14 @@ export class LocationService {
     /**
      * For a giving advert location data finds Noma Location Street
      * @param location {$Advert.$Location} - advert location data
+     * @param settlement - advert settlement(id)
+     * @param district - advert district(id)
      */
-    public async getStreet(location: $Advert.$Location): Promise<string | null> {
+    public async getStreet(
+        location: $Advert.$Location,
+        settlement: string | null,
+        district: string | null,
+    ): Promise<string | null> {
         const { street } = location;
 
         if (street) {
@@ -106,20 +146,37 @@ export class LocationService {
             }
 
             const regex = LocationService.stringToRegex(
-                street.replace("вул", "").replace("вулиця", "").replace("просп", "").replace("проспект", ""),
+                street
+                    .toLowerCase()
+                    .replace("вулиця", "")
+                    .replace("проспект", "")
+                    .replace("вул", "")
+                    .replace("просп", ""),
             );
 
+            const params = { type, regex };
+
+            if (settlement) {
+                params["settlementID"] = settlement;
+            }
+
+            if (district) {
+                params["districts"] = { anyOf: [district] };
+            }
+
             try {
-                const response: AxiosResponse<{ matches: string[] }> = await lastValueFrom(
-                    this.httpService.get(`${this.baseURL}/street`, { params: { regex, type } }),
+                const response: AxiosResponse<{ _id: string }[]> = await lastValueFrom(
+                    this.httpService.get(`${this.baseURL}/street`, { params }),
                 );
 
-                if (response.data.matches.length > 1) {
+                if (response.data.length > 1) {
                     this.logger.error(`Location cast error: found more than one match for street ${street}`);
-                } else if (response.data.matches.length === 0) {
+                    return null;
+                } else if (response.data.length === 0) {
                     this.logger.error(`Location cast error: no matching streets for ${street}`);
+                    return null;
                 } else {
-                    return response.data.matches[0];
+                    return response.data[0]._id;
                 }
             } catch (e) {
                 return null;
