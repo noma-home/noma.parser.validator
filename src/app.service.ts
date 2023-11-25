@@ -125,7 +125,7 @@ export class AppService {
         }
 
         const seller = await this.sellerService.getOrCreate(data.seller);
-        const parseData = { resource: response.metadata.parser.name, date: response.metadata.time.finish };
+        const parseData = { resource: response.metadata.parser.name, date: response.metadata.finish };
 
         if (seller.isRealtor) {
             const advert = await this.advertService.create(convertedAdvert, seller._id, parseData, true);
@@ -275,10 +275,5 @@ export class AppService {
         }
 
         return advertDto;
-    }
-
-    public async test() {
-        const id = "651700fd2b2af2102a196c87";
-        await this.nomaService.createAdvert(id);
     }
 }

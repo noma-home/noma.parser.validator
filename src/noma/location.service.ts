@@ -83,7 +83,7 @@ export class LocationService {
                 }
             } catch (e) {
                 if (e instanceof AxiosError) {
-                    console.log(e.response.data);
+                    this.logger.error(`${e.response?.data}`);
                 }
                 return null;
             }

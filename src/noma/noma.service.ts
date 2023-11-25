@@ -124,7 +124,7 @@ export class NomaService {
                 status: { isRealtor: instance.isRealtor },
                 privacySettings: { showFullName: true, showPhoneNumber: true, allowMessages: false },
                 data: {
-                    firstName: instance.account.names[0],
+                    firstName: instance.account.names[0].replace(/\b\w/g, (match) => match.toUpperCase()),
                     phones: instance.account.phones,
                 },
             }),

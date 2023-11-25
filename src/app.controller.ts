@@ -25,17 +25,12 @@ export class AppController {
         @Payload()
         response: ParseLatestResponseDto,
     ) {
-        await this.appService.filterIncomeAdverts(response.data.adverts, response.metadata.parser);
+        await this.appService.filterIncomeAdverts(response.data, response.metadata.parser);
     }
 
     @EventPattern("parse:latest")
     public async parseLatest(@Payload() data: ParseLatestRequest) {
         await this.appService.requestToParseLatest(data.parser, data.category, data.operation, data.limit);
         this.logger.log(`Sent parse latest request with options (${JSON.stringify(data)})`);
-    }
-
-    @EventPattern("test")
-    public async test() {
-        await this.appService.test();
     }
 }

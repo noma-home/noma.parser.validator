@@ -60,10 +60,8 @@ export namespace $Parse {
     namespace $Response {
         interface _Metadata {
             parser: $Parser;
-            time: {
-                start: Date;
-                finish: Date;
-            };
+            start: Date;
+            finish: Date;
         }
 
         interface _Response {

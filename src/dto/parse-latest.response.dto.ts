@@ -28,8 +28,10 @@ class RequestDataDto {
 class RequestDto {
     pattern: "parse:latest" = "parse:latest";
 
-    @ValidateNested()
-    public data: RequestDataDto;
+    @IsNotEmpty()
+    @IsString({ each: true })
+    @IsArray()
+    public data: string[];
 }
 
 export class ParseLatestResponseDto extends ParseResponseDto {
@@ -38,6 +40,7 @@ export class ParseLatestResponseDto extends ParseResponseDto {
     public request: RequestDto;
 
     @IsNotEmpty()
-    @IsObject()
-    public data: ResponseDataDto;
+    @IsString({ each: true })
+    @IsArray()
+    public data: string[];
 }

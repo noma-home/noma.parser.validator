@@ -129,4 +129,17 @@ export class SellerService {
     public async updateNomaRef(sellerID: string, nomaID: string | null) {
         return this.model.findByIdAndUpdate(sellerID, { nomaID }, { new: true });
     }
+
+    /**
+     * Updates seller status by `nomaID`, returns `true` if updated, otherwise `false`
+     * @param nomaID - target seller
+     * @param data - update data
+     */
+    public async updateStatus(
+        nomaID: string,
+        data: { isRealtor?: boolean; isApprovedSeller?: boolean },
+    ): Promise<boolean> {
+        const output = await this.model.findOneAndUpdate({ nomaID }, { $set: data });
+        return Boolean(output);
+    }
 }

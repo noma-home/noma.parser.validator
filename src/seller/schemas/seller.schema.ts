@@ -13,6 +13,9 @@ export class Seller {
     @Prop({ type: Boolean, default: false })
     isRealtor: boolean;
 
+    @Prop({ type: Boolean, default: false })
+    isApprovedSeller: boolean;
+
     @Prop({ type: String, required: false, default: null })
     nomaID: string;
 }
